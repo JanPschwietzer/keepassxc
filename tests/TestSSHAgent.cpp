@@ -30,16 +30,14 @@ QTEST_GUILESS_MAIN(TestSSHAgent)
 void TestSSHAgent::initTestCase()
 {
     QVERIFY(Crypto::init());
-    Config::createTempFileInstance();
 
-    m_agentSocketFile.setAutoRemove(true);
-    QVERIFY(m_agentSocketFile.open());
+    // Create temporary config file
+    Config::createConfigFromFile(TemporaryFile::createTempConfigFile(), {});
 
-    m_agentSocketFileName = m_agentSocketFile.fileName();
+    m_agentSocketFile.reset(new TemporaryFile(this));
+
+    m_agentSocketFileName = m_agentSocketFile->fileName();
     QVERIFY(!m_agentSocketFileName.isEmpty());
-
-    // let ssh-agent re-create it as a socket
-    QVERIFY(m_agentSocketFile.remove());
 
     QStringList arguments;
     arguments << "-D" << "-a" << m_agentSocketFileName;
@@ -291,6 +289,4 @@ void TestSSHAgent::cleanupTestCase()
         m_agentProcess.terminate();
         m_agentProcess.waitForFinished();
     }
-
-    m_agentSocketFile.remove();
 }
